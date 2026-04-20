@@ -1,7 +1,12 @@
-# TODO: use envsubst to fill in the appropriate $USER in install.sh
-SUBSYSTEM=="usb", ATTRS{idVendor}=="1038", ATTRS{idProduct}=="220e", OWNER="${USER}", GROUP="${USER}", MODE="0664"
-SUBSYSTEM=="usb", ATTRS{idVendor}=="1038", ATTRS{idProduct}=="227a", OWNER="${USER}", GROUP="${USER}", MODE="0664"
+## SteelSeries Arctis 7 / 7+ / Nova 7 dongle (multiple model IDs)
+# Grant seat-based access via uaccess, and create a stable systemd device alias
+# so dev-arctis7.device can be targeted. Include both known product IDs.
 
+SUBSYSTEM=="usb", ATTRS{idVendor}=="1038", ATTRS{idProduct}=="220e", TAG+="uaccess", TAG+="systemd", ENV{SYSTEMD_ALIAS}="/dev/arctis7"
+SUBSYSTEM=="usb", ATTRS{idVendor}=="1038", ATTRS{idProduct}=="227a", TAG+="uaccess", TAG+="systemd", ENV{SYSTEMD_ALIAS}="/dev/arctis7"
+
+# Ensure systemd sees add/remove to update dev-arctis7.device state
 ACTION=="add", SUBSYSTEM=="usb", ATTRS{idVendor}=="1038", ATTRS{idProduct}=="220e", TAG+="systemd", ENV{SYSTEMD_ALIAS}="/dev/arctis7"
 ACTION=="add", SUBSYSTEM=="usb", ATTRS{idVendor}=="1038", ATTRS{idProduct}=="227a", TAG+="systemd", ENV{SYSTEMD_ALIAS}="/dev/arctis7"
 ACTION=="remove", SUBSYSTEM=="usb", ENV{PRODUCT}=="1038/220e/*", TAG+="systemd"
+ACTION=="remove", SUBSYSTEM=="usb", ENV{PRODUCT}=="1038/227a/*", TAG+="systemd"
