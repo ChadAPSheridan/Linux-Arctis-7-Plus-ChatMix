@@ -51,7 +51,9 @@ echo "You may need to provide your sudo password for this step."
 envsubst < "${CONFIG_DIR}${UDEV_CONFIG}" > "$UDEV_CONFIG"
 sudo cp "$UDEV_CONFIG" "$UDEV_DIR" || \
     { echo "FATAL: Failed to copy $UDEV_CONFIG" ; cleanup ; exit 1;}
-sudo udevadm control --reload
+sudo udevadm control --reload-rules
+# Re-apply new rules to already-present SteelSeries devices so ACLs and alias take effect
+sudo udevadm trigger --verbose --settle --action=add --attr-match=idVendor=1038
 rm -f "$UDEV_CONFIG"
 
 echo
@@ -65,3 +67,32 @@ cp "${CONFIG_DIR}${SYSTEMD_CONFIG}" "$SYSTEMD_DIR"
 echo
 echo "Enabling systemd unit $SYSTEMD_CONFIG."
 systemctl --user enable "$SYSTEMD_CONFIG" 2>/dev/null
+
+echo
+echo "Post-install checks:"
+# Detect connected SteelSeries dongle product IDs and report
+if command -v lsusb >/dev/null 2>&1; then
+    LSUSB_LINE=$(lsusb -d 1038: 2>/dev/null | head -n1)
+    if [[ -n "$LSUSB_LINE" ]]; then
+        PROD_ID=$(echo "$LSUSB_LINE" | awk -F: '{print $3}' | awk '{print $1}')
+        echo "Detected SteelSeries USB device idProduct=$PROD_ID"
+        case "$PROD_ID" in
+            220e|227a)
+                echo "Known dongle ID found; udev rules include this mapping."
+                ;;
+            *)
+                echo "WARNING: Unknown SteelSeries product ID ($PROD_ID). You may need to add it to system-config/91-steelseries-arctis-7p.rules."
+                ;;
+        esac
+    else
+        echo "No SteelSeries USB device detected right now; udev rules installed and will apply on next plug." 
+    fi
+fi
+
+# Hint if the user systemd instance is not lingering (device-triggered user units won't start automatically)
+if command -v loginctl >/dev/null 2>&1; then
+    if loginctl show-user "$USER" 2>/dev/null | grep -q '^Linger=no'; then
+        echo "NOTE: Your user systemd is not lingering. To allow device-triggered user services, run:"
+        echo "  sudo loginctl enable-linger $USER"
+    fi
+fi
