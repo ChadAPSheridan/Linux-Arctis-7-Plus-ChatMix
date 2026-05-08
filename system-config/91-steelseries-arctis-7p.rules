@@ -2,8 +2,8 @@
 # Grant seat-based access via uaccess, and create a stable systemd device alias
 # so dev-arctis7.device can be targeted. Include both known product IDs.
 
-SUBSYSTEM=="usb", ATTRS{idVendor}=="1038", ATTRS{idProduct}=="220e", TAG+="uaccess", TAG+="systemd", ENV{SYSTEMD_ALIAS}="/dev/arctis7"
-SUBSYSTEM=="usb", ATTRS{idVendor}=="1038", ATTRS{idProduct}=="227a", TAG+="uaccess", TAG+="systemd", ENV{SYSTEMD_ALIAS}="/dev/arctis7"
+SUBSYSTEM=="usb", ATTRS{idVendor}=="1038", ATTRS{idProduct}=="220e", TAG+="uaccess", TAG+="systemd", ENV{SYSTEMD_ALIAS}="/dev/arctis7", MODE="0660"
+SUBSYSTEM=="usb", ATTRS{idVendor}=="1038", ATTRS{idProduct}=="227a", TAG+="uaccess", TAG+="systemd", ENV{SYSTEMD_ALIAS}="/dev/arctis7", MODE="0660"
 
 # Ensure systemd sees add/remove to update dev-arctis7.device state
 ACTION=="add", SUBSYSTEM=="usb", ATTRS{idVendor}=="1038", ATTRS{idProduct}=="220e", TAG+="systemd", ENV{SYSTEMD_ALIAS}="/dev/arctis7"
